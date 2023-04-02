@@ -1,2 +1,5 @@
 rootProject.name = 'kafka-learning'
+include 'kafka-producer-wikimedia'
+include 'kafka-basics'
+include 'kafka-consumer-elasticsearch'
 
