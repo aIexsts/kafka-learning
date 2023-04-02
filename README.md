@@ -73,3 +73,39 @@ KTable<String, Long> favouriteColours = usersAndColoursTable
 favouriteColours.to(Serdes.String(), Serdes.Long(),"favourite-colour-output");
 
 ```
+
+
+## Simulating data
+
+Using Google RateLimiter
+```java
+private static RateLimiter limiter = RateLimiter.create(MESSAGES_PER_SECOND);
+
+method() {
+    limiter.acquire(); 
+}
+
+```
+
+## Useful Kafka Code
+
+
+```java
+private static void logKafkaRecord(final RecordMetadata metadata, final Exception exception) {
+    if (Objects.isNull(exception)) {
+        log.info("Received new metadata \n" +
+            "Topic: " + metadata.topic() + "\n" +
+            "Partition: " + metadata.partition() + "\n" +
+            "Offset: " + metadata.offset() + "\n" +
+            "Timestamp: " + metadata.timestamp()
+        );
+    } else {
+        log.error("Error while producing", exception);
+    }
+}
+
+private static void setupGracefulShutDown(final KafkaProducer producer) {
+    Runtime.getRuntime().addShutdownHook(new Thread(producer::close));
+}
+```
+
