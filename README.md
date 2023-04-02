@@ -1,5 +1,38 @@
 ### Enrichment of Events is achieved by using JOINS!
 
+```java
+// we get a global table out of Kafka. This table will be replicated on each Kafka Streams application
+// the key of our globalKTable is the user ID
+GlobalKTable<String, String> usersGlobalTable = builder.globalTable("user-table");
+
+// we get a stream of user purchases
+KStream<String, String> userPurchases = builder.stream("user-purchases");
+
+// we want to enrich that stream
+KStream<String, String> userPurchasesEnrichedJoin =
+userPurchases.join(usersGlobalTable,
+(key, value) -> key, /* map from the (key, value) of this stream to the key of the GlobalKTable */
+    (userPurchase, userInfo) -> "Purchase=" + userPurchase + ",UserInfo=[" + userInfo + "]"
+);
+
+userPurchasesEnrichedJoin.to("user-purchases-enriched-inner-join");
+
+// we want to enrich that stream using a Left Join
+KStream<String, String> userPurchasesEnrichedLeftJoin =
+userPurchases.leftJoin(usersGlobalTable,
+(key, value) -> key, /* map from the (key, value) of this stream to the key of the GlobalKTable */
+(userPurchase, userInfo) -> {
+// as this is a left join, userInfo can be null
+    if (userInfo != null) {
+        return "Purchase=" + userPurchase + ",UserInfo=[" + userInfo + "]";
+    } else {
+        return "Purchase=" + userPurchase + ",UserInfo=null";
+    }
+});
+
+userPurchasesEnrichedLeftJoin.to("user-purchases-enriched-left-join");
+```
+
 ### To count items grouped by key:
 
 1) use aggregation functions on stream - save result to other topic
@@ -8,16 +41,16 @@
 KStream<String, JsonNode> bankTransactions =
 builder.stream(Serdes.String(), jsonSerde, "bank-transactions");
 
-        KTable<String, JsonNode> bankBalance = bankTransactions
-            .groupByKey(Serdes.String(), jsonSerde)
-            .aggregate(
-                BankBalanceExactlyOnceApp::initialBalance,
-                (aggKey, newValue, aggValue) -> newBalance(newValue, aggValue),
-                jsonSerde,
-                "bank-balance-agg"
-            );
+KTable<String, JsonNode> bankBalance = bankTransactions
+    .groupByKey(Serdes.String(), jsonSerde)
+    .aggregate(
+        BankBalanceExactlyOnceApp::initialBalance,
+        (aggKey, newValue, aggValue) -> newBalance(newValue, aggValue),
+        jsonSerde,
+        "bank-balance-agg"
+    );
 
-        bankBalance.to(Serdes.String(), jsonSerde, "bank-balance-exactly-once");
+bankBalance.to(Serdes.String(), jsonSerde, "bank-balance-exactly-once");
 ```
 
 
