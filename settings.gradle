@@ -2,4 +2,8 @@ rootProject.name = 'kafka-learning'
 include 'kafka-producer-wikimedia'
 include 'kafka-basics'
 include 'kafka-consumer-elasticsearch'
+include 'streams-user-event-enricher'
+include 'streams-word-count'
+include 'streams-favourite-colour'
+include 'streams-bank-balance'
 
